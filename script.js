@@ -1,187 +1,145 @@
-// Inicializar objetos visuales al cargar la página
-window.onload = function() {
-    // Primera ley
-    const inertiaObject = document.getElementById("inertia-object");
-    inertiaObject.style.left = "10px";
-    inertiaObject.style.top = "75px";
-    
-    // Segunda ley
-    const dynamicsObject = document.getElementById("dynamics-object");
-    dynamicsObject.style.left = "50px";
-    dynamicsObject.style.top = "75px";
-    
-    // Tercera ley
-    const actionObject = document.getElementById("action-object");
-    actionObject.style.left = "70px";
-    actionObject.style.top = "75px";
-    
-    const reactionObject = document.getElementById("reaction-object");
-    reactionObject.style.left = "180px";
-    reactionObject.style.top = "75px";
+// Utilidad para establecer la posición de un objeto
+function setPosition(elementId, x, y) {
+    const el = document.getElementById(elementId);
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+}
+
+// Validación de entrada numérica
+function getValidatedInput(id) {
+    const value = parseFloat(document.getElementById(id).value);
+    return isNaN(value) ? null : value;
+}
+
+// Inicializar objetos al cargar
+window.onload = () => {
+    setPosition("inertia-object", 10, 75);
+    setPosition("dynamics-object", 50, 75);
+    setPosition("action-object", 70, 75);
+    setPosition("reaction-object", 180, 75);
 };
 
-// Función para la demostración de la Primera Ley
+// Primera Ley de Newton
 function runInertiaDemo() {
-    const friction = parseFloat(document.getElementById("friction").value);
-    const initialVelocity = parseFloat(document.getElementById("initial-velocity").value);
-    
-    if (isNaN(friction) || isNaN(initialVelocity)) {
+    const friction = getValidatedInput("friction");
+    const initialVelocity = getValidatedInput("initial-velocity");
+
+    if (friction === null || initialVelocity === null) {
         document.getElementById("inertia-result").innerHTML = "<p>Por favor, ingresa valores válidos.</p>";
         return;
     }
-    
+
     const object = document.getElementById("inertia-object");
-    object.style.left = "10px";
-    object.style.top = "75px";
-    
+    setPosition("inertia-object", 10, 75);
+
     let velocity = initialVelocity;
     let position = 10;
-    
-    // Resetear resultado
+
+    clearInterval(window.inertiaInterval);
     document.getElementById("inertia-result").innerHTML = "<p>Simulación en progreso...</p>";
-    
-    // Limpiar animaciones anteriores
-    if (window.inertiaInterval) {
-        clearInterval(window.inertiaInterval);
-    }
-    
-    // Animación
+
     window.inertiaInterval = setInterval(() => {
-        // Aplicar fricción
         velocity -= friction * 0.05 * velocity;
-        
-        // Actualizar posición
         position += velocity * 0.1;
-        object.style.left = position + "px";
-        
-        // Detener si la velocidad es muy baja o el objeto sale del contenedor
-        if (velocity < 0.1 || position > document.getElementById("primera-ley-vis").offsetWidth - 50) {
+        object.style.left = `${position}px`;
+
+        const limit = document.getElementById("primera-ley-vis").offsetWidth - 50;
+        if (velocity < 0.1 || position > limit) {
             clearInterval(window.inertiaInterval);
             document.getElementById("inertia-result").innerHTML = `
                 <p><strong>Resultados:</strong></p>
                 <p>Velocidad final: ${velocity.toFixed(2)} m/s</p>
                 <p>Distancia recorrida: ${(position - 10).toFixed(2)} m</p>
-                <p>Este es un ejemplo de cómo un objeto en movimiento tiende a permanecer en movimiento,
-                pero la fuerza de fricción actúa como una fuerza externa que lo desacelera.</p>
+                <p>La fricción desacelera el objeto en movimiento.</p>
             `;
         }
     }, 50);
 }
 
-// Función para la Segunda Ley
+// Segunda Ley de Newton
 function calculateAcceleration() {
-    const mass = parseFloat(document.getElementById("mass").value);
-    const force = parseFloat(document.getElementById("force").value);
-    
-    if (isNaN(mass) || isNaN(force) || mass <= 0) {
+    const mass = getValidatedInput("mass");
+    const force = getValidatedInput("force");
+
+    if (!mass || !force || mass <= 0) {
         document.getElementById("acceleration-result").innerHTML = "<p>Por favor, ingresa valores válidos.</p>";
         return;
     }
-    
+
     const acceleration = force / mass;
-    
-    // Mostrar resultado
-    document.getElementById("acceleration-result").innerHTML = `
-        <p><strong>Resultados:</strong></p>
-        <p>Aceleración: ${acceleration.toFixed(2)} m/s²</p>
-        <p>Fórmula aplicada: F = m·a → a = F/m</p>
-    `;
-    
-    // Animación visual
     const object = document.getElementById("dynamics-object");
     const arrow = document.getElementById("force-arrow");
-    
-    object.style.left = "50px";
-    object.style.top = "75px";
-    
-    // Mostrar flecha de fuerza
+
+    setPosition("dynamics-object", 50, 75);
     arrow.style.left = "100px";
     arrow.style.top = "100px";
     arrow.style.width = `${force * 3}px`;
-    
-    // Limpiar animaciones anteriores
-    if (window.accelInterval) {
-        clearInterval(window.accelInterval);
-    }
-    
-    // Animar el objeto
+
+    document.getElementById("acceleration-result").innerHTML = `
+        <p><strong>Resultados:</strong></p>
+        <p>Aceleración: ${acceleration.toFixed(2)} m/s²</p>
+        <p>Fórmula aplicada: a = F / m</p>
+    `;
+
+    clearInterval(window.accelInterval);
     let position = 50;
     let velocity = 0;
-    
+
     window.accelInterval = setInterval(() => {
         velocity += acceleration * 0.1;
         position += velocity * 0.1;
-        
-        object.style.left = position + "px";
-        
-        if (position > document.getElementById("segunda-ley-vis").offsetWidth - 50) {
-            clearInterval(window.accelInterval);
-        }
+        object.style.left = `${position}px`;
+
+        const limit = document.getElementById("segunda-ley-vis").offsetWidth - 50;
+        if (position > limit) clearInterval(window.accelInterval);
     }, 50);
 }
 
-// Función para la Tercera Ley
+// Tercera Ley de Newton
 function runActionReactionDemo() {
-    const actionForce = parseFloat(document.getElementById("action-force").value);
-    
-    if (isNaN(actionForce) || actionForce <= 0) {
-        document.getElementById("action-reaction-result").innerHTML = "<p>Por favor, ingresa un valor válido para la fuerza.</p>";
+    const actionForce = getValidatedInput("action-force");
+
+    if (!actionForce || actionForce <= 0) {
+        document.getElementById("action-reaction-result").innerHTML = "<p>Ingresa una fuerza válida.</p>";
         return;
     }
-    
-    const actionObject = document.getElementById("action-object");
-    const reactionObject = document.getElementById("reaction-object");
-    
-    // Posiciones iniciales
-    actionObject.style.left = "70px";
-    actionObject.style.top = "75px";
-    
-    reactionObject.style.left = "180px";
-    reactionObject.style.top = "75px";
-    
+
+    const actionObj = document.getElementById("action-object");
+    const reactionObj = document.getElementById("reaction-object");
+
+    setPosition("action-object", 70, 75);
+    setPosition("reaction-object", 180, 75);
     document.getElementById("action-reaction-result").innerHTML = "<p>Simulación en progreso...</p>";
-    
-    // Limpiar timers anteriores
-    if (window.actionTimeout) {
-        clearTimeout(window.actionTimeout);
-    }
-    if (window.actionAnim1) {
-        clearInterval(window.actionAnim1);
-    }
-    if (window.actionAnim2) {
-        clearInterval(window.actionAnim2);
-    }
-    
-    // Animación del choque
+
+    clearTimeout(window.actionTimeout);
+    clearInterval(window.actionAnim1);
+    clearInterval(window.actionAnim2);
+
+    let pos1 = 70;
     window.actionTimeout = setTimeout(() => {
-        // Mover objeto de acción
-        let pos1 = 70;
         window.actionAnim1 = setInterval(() => {
             pos1 += 5;
-            actionObject.style.left = pos1 + "px";
-            
+            actionObj.style.left = `${pos1}px`;
+
             if (pos1 >= 130) {
                 clearInterval(window.actionAnim1);
-                
-                // Después del contacto, ambos objetos se mueven en direcciones opuestas
                 let pos1After = 130;
                 let pos2After = 180;
-                
+
                 window.actionAnim2 = setInterval(() => {
                     pos1After -= (actionForce / 20);
                     pos2After += (actionForce / 20);
-                    
-                    actionObject.style.left = pos1After + "px";
-                    reactionObject.style.left = pos2After + "px";
-                    
+
+                    actionObj.style.left = `${pos1After}px`;
+                    reactionObj.style.left = `${pos2After}px`;
+
                     if (pos1After <= 50 || pos2After >= 250) {
                         clearInterval(window.actionAnim2);
-                        
                         document.getElementById("action-reaction-result").innerHTML = `
                             <p><strong>Resultados:</strong></p>
                             <p>Fuerza de acción: ${actionForce.toFixed(2)} N</p>
-                            <p>Fuerza de reacción: ${-actionForce.toFixed(2)} N</p>
-                            <p>La tercera ley de Newton demuestra que ambos objetos experimentan fuerzas iguales pero opuestas durante la colisión.</p>
+                            <p>Fuerza de reacción: ${(-actionForce).toFixed(2)} N</p>
+                            <p>Ambos objetos reaccionan con fuerzas iguales y opuestas.</p>
                         `;
                     }
                 }, 50);
@@ -190,60 +148,54 @@ function runActionReactionDemo() {
     }, 500);
 }
 
-// Cálculo del plano inclinado
+// Cálculo en plano inclinado
 function calculateInclinedPlane() {
-    const mass = parseFloat(document.getElementById("object-mass").value);
-    const angle = parseFloat(document.getElementById("angle").value);
-    const frictionCoef = parseFloat(document.getElementById("friction-coef").value);
-    
-    if (isNaN(mass) || isNaN(angle) || isNaN(frictionCoef) || mass <= 0 || angle < 0 || angle > 90) {
-        document.getElementById("inclined-result").innerHTML = "<p>Por favor, ingresa valores válidos.</p>";
+    const mass = getValidatedInput("object-mass");
+    const angle = getValidatedInput("angle");
+    const mu = getValidatedInput("friction-coef");
+
+    if (!mass || !angle || !mu || mass <= 0 || angle < 0 || angle > 90) {
+        document.getElementById("inclined-result").innerHTML = "<p>Ingresa valores válidos.</p>";
         return;
     }
-    
-    // Conversión a radianes
-    const angleRad = angle * Math.PI / 180;
-    
-    // Calcular componentes
-    const gravityForce = mass * 9.8;
-    const parallelComponent = gravityForce * Math.sin(angleRad);
-    const perpendicularComponent = gravityForce * Math.cos(angleRad);
-    const frictionForce = frictionCoef * perpendicularComponent;
-    const netForce = parallelComponent - frictionForce;
-    
-    // Determinar si el objeto se desliza
-    let acceleration = 0;
-    let willSlide = false;
-    
-    if (netForce > 0) {
-        acceleration = netForce / mass;
-        willSlide = true;
-    }
-    
-    // Mostrar resultados
-    document.getElementById("inclined-result").innerHTML = `
+
+    const g = 9.8;
+    const rad = angle * Math.PI / 180;
+    const weight = mass * g;
+    const Fp = weight * Math.sin(rad);
+    const Fn = weight * Math.cos(rad);
+    const Ff = mu * Fn;
+    const net = Fp - Ff;
+
+    let msg = `
         <p><strong>Resultados:</strong></p>
-        <p>Peso del objeto: ${gravityForce.toFixed(2)} N</p>
-        <p>Componente paralela al plano: ${parallelComponent.toFixed(2)} N</p>
-        <p>Componente perpendicular al plano: ${perpendicularComponent.toFixed(2)} N</p>
-        <p>Fuerza de fricción: ${frictionForce.toFixed(2)} N</p>
-        <p>Fuerza neta: ${netForce.toFixed(2)} N</p>
-        <p>${willSlide ? 
-           `El objeto se deslizará con una aceleración de ${acceleration.toFixed(2)} m/s²` : 
-           'El objeto permanece en reposo debido a que la fuerza de fricción es suficiente para contrarrestar la componente paralela del peso'}</p>
+        <p>Peso: ${weight.toFixed(2)} N</p>
+        <p>Componente paralela: ${Fp.toFixed(2)} N</p>
+        <p>Componente perpendicular: ${Fn.toFixed(2)} N</p>
+        <p>Fricción: ${Ff.toFixed(2)} N</p>
+        <p>Fuerza neta: ${net.toFixed(2)} N</p>
     `;
+
+    if (net > 0) {
+        const a = net / mass;
+        msg += `<p>El objeto se desliza con aceleración: ${a.toFixed(2)} m/s²</p>`;
+    } else {
+        msg += `<p>El objeto no se desliza debido a la fricción.</p>`;
+    }
+
+    document.getElementById("inclined-result").innerHTML = msg;
 }
 
-// Función para navegación suave
+// Navegación suave
 document.querySelectorAll('nav a').forEach(anchor => {
-    anchor.addEventListener('click', function(e) {
+    anchor.addEventListener('click', e => {
         e.preventDefault();
-        const targetId = this.getAttribute('href');
-        const targetElement = document.querySelector(targetId);
-        
+        const id = anchor.getAttribute('href');
+        const section = document.querySelector(id);
         window.scrollTo({
-            top: targetElement.offsetTop - 70,
+            top: section.offsetTop - 70,
             behavior: 'smooth'
         });
     });
 });
+
